@@ -1,0 +1,45 @@
+The goal is to take a list of possible names and decide if each one is actually a name or not.
+"Name" here could include location names as well, since those might be identifying info. The general
+strategy is to look at each name and annotate it (in a new column) as:
+    * 0 -- not a name
+    * 1 -- probably a name
+
+There are several columns in the list of possible names:
+    * possible_name -- the actual name to be annotated
+	* num_posts     -- number of total posts (can be ignored)
+	* occurrences   -- number of occurrences (not number of posts in which it occurred)
+	* capitalized_occurrences       -- number of occurrences where the first letter was capitalized
+    * mid_sentence_cap              -- number of capitalized occurrences not beginning a sentence
+	* sentence_start_occurrences    -- number of occurrences at the beginning of a sentence
+	* is_dictionary_word    -- is it a common dictionary word?
+	* is_common_firstname   -- is it a common first name (US census data)?
+	* is_common_lastname    -- is it a common last name?
+	* is_city               -- is it a city name (worldwide)
+	* is_country            -- is it a country name
+	* is_subcountry         -- is it a state/province/territory/etc. name?
+	* context_words         -- most common preceding words
+	* context_words_capital -- common words preceding only capitalized occurrences
+    * context_words_mid_cap -- common words preceding only mid-sentence capitalized occurrences
+
+Context words may contain some special tokens, including:
+    * possible_name -- represents all words in the list of possible names
+    * email_placeholder, url_placeholder, phone_placeholder -- all removed for anonymization
+    * number_placeholder -- removed in case they are zip codes/addresses/etc.
+
+The recommended procedure for annotation is this:
+    1) Is it obviously a name or not just based on what word it is (e.g., Karl, misspellings)?
+    2) If not, look at context words columns for greetings and location words
+    3) If it is still unclear, look at mid_sentence_cap and other occurrence count columns to get a
+       sense of how many mid-sentence capitalizations there are versus overall occurrences
+       -- Is it always capitalized mid-sentence (probably a name), or never (probably not a name)?
+    4) Look at other columns, erring on the side of caution (false positives)
+
+Name issues:
+    * There may be many pop culture or topic-specific names (e.g., Obama, Galileo). We will count
+      these as names for the sake of consistency and to be on the safe side.
+
+Location issues:
+    * We do not want to annotate broad locations such as planets or continents as names. The
+      specific cutoff for an identifying location is any political boundary (e.g., country, state)
+      that existed on or after January 1, 1900. This includes, for example, Munich, Bavaria, Germany
+      and the USSR, but not Africa, Babylon, or the Midwest.

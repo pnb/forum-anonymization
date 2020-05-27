@@ -1,0 +1,32 @@
+id,post
+1,Hi I am nigel
+2,Hi I am Nigel
+3,Hi this is Nigel's post
+4,Nigel at the beginning
+5,Nigel
+6,Unicode ߶ something Nigel
+7,123456
+8,This post has Urbana in it
+9,This one has Urbana-Champaign; will it be flagged?
+10,This post has multiple sentences. Nigel is at the beginning of the second.
+11,Some country post USA United States Canada france
+12,Puerto Rico and the United States of America
+13,potato Urbana
+14,potato Urbana
+15,potato Urbana potato should now appear first.
+16,This one has an email address in it: tester@test.com
+17,While this has a URL in parentheses (https://google.com)
+18,"Some complex URL: http://api.plos.org/search?q=title:%22Drosophila%22%20and%20body:%22RNA%22&fl=id,abstract"
+19,"Same URL with no protocol api.plos.org/search?q=title:%22Drosophila%22%20and%20body:%22RNA%22&fl=id,abstract"
+20,Post with phone number in it: 123-456-7890
+21,Post with unformatted phone # 1234567890
+22,Post with (098) 765 4321 phone # in middle
+23,Abutting phone num(123)4567890
+24,Just a long number 123456789009876543
+25,Some possessive's test
+26,A possessive's test with Nigel's name
+27,A contraction shouldn't count as two words
+28,What about a long contraction like wouldn't've
+29,Or just one with more than one letter after like he'll
+30,Numbers should not be possible in context words 1 1 1 2 2 maryanne
+31,bad utf8 stuff .¬† here
