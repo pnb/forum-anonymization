@@ -6,7 +6,7 @@ The software includes pre-trained machine learning models to distinguish names f
 
 A detailed description of the anonymization method is available in:
 
-> Bosch, N., Crues, R. W., Shaik, N., & Paquette, L. (in press). "Hello, [REDACTED]": Protecting student privacy in analyses of online discussion forums. In Proceedings of the 13th International Conference on Educational Data Mining (EDM 2020). International Educational Data Mining Society.
+> Bosch, N., Crues, R. W., Shaik, N., & Paquette, L. (2020). "Hello, [REDACTED]": [Protecting student privacy in analyses of online discussion forums](https://educationaldatamining.org/files/conferences/EDM2020/papers/paper_26.pdf). In Proceedings of the 13th International Conference on Educational Data Mining (EDM 2020) (pp. 39–49). International Educational Data Mining Society.
 
 ## Set up the python environment
 
