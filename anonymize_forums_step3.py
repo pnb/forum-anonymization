@@ -10,10 +10,10 @@ from tqdm import tqdm
 
 
 # See step 1 for info on regular expressions (TODO: ideally these should not be redundant)
-EMAIL_REGEX = r'\b[a-zA-Z0-9_.+]+@[a-zA-Z0-9_.+]+\.[a-zA-Z0-9_.+]+\b'
-URL_REGEX = r'\b((http|https|ftp)://|www\d{0,3}.)\S+'
-PHONE_REGEX = r'(\b|\()(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b'
-NUMBERS_REGEX = r'\b[0-9]+\b'
+EMAIL_REGEX = re.compile(r'\b[a-zA-Z0-9_.+]+@[a-zA-Z0-9_.+]+\.[a-zA-Z0-9_.+]+\b')
+URL_REGEX = re.compile(r'\b((http|https|ftp)://|www\d{0,3}.)\S+')
+PHONE_REGEX = re.compile(r'(\b|\()(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b')
+NUMBERS_REGEX = re.compile(r'\b[0-9]+\b')
 
 
 def yes_no_prompt(prompt_text):
@@ -68,21 +68,21 @@ if 'possible_name' not in names_df.columns:
     print('The file with a list of possible names must contain a "possible_name" column.')
     sys.exit(1)
 names = names_df.possible_name.values
+names_regex = re.compile(r'\b(' + '|'.join(names) + r')\b', flags=re.IGNORECASE)
 
 # Anonymize forum text column
 result = []
 for post in tqdm(posts, desc=' Redacting posts'):
     # Remove email addresses
-    post = re.sub(EMAIL_REGEX, ' email_placeholder ', post)
+    post = EMAIL_REGEX.sub(' email_placeholder ', post)
     # Remove URLs
-    post = re.sub(URL_REGEX, ' url_placeholder ', post)
+    post = URL_REGEX.sub(' url_placeholder ', post)
     # Remove phone numbers
-    post = re.sub(PHONE_REGEX, ' phone_placeholder ', post)
+    post = PHONE_REGEX.sub(' phone_placeholder ', post)
     # Replace other numbers (could be addresses/zip codes, also just not very semantic)
-    post = re.sub(NUMBERS_REGEX, ' number_placeholder ', post)
+    post = NUMBERS_REGEX.sub(' number_placeholder ', post)
     # Remove names
-    for name in names:
-        post = re.sub(r'\b' + name + r'\b', 'name_placeholder', post, flags=re.IGNORECASE)
+    post = names_regex.sub('name_placeholder', post)
     result.append(post)
 
 # Save results to file
