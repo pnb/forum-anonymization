@@ -1,3 +1,5 @@
+# Replacement file for step 1
+
 # coding=utf-8
 # The strategy here is to:
 # 1) Subtract a list of English names from a dictionary to get a word list of non-name English
@@ -127,10 +129,10 @@ for post_i, (post_id, post) in enumerate(zip(post_ids, posts)):
                     'possible_name': w,
                     'multi_word_name_original': multi_word_map[w] if w in multi_word_map else '',
                     'index_in_post': word_i,
-                    'avg_index_in_post': 0,
+                    'avg_index_in_post': 0, # Avg will be calculated after recording all the occurences
                     'post_length_words': len(words),
+                    'avg_post_length_word':0, # Avg will be calculated after recording all the occurences
                     'occurrences': 0,
-                    'occurence_indices':[],
                     'capitalized_occurrences': 0,
                     'mid_sentence_cap': 0,
                     'sentence_start_occurrences': 0,
@@ -143,9 +145,12 @@ for post_i, (post_id, post) in enumerate(zip(post_ids, posts)):
                     'context_words': {},  # Context before all occurrences
                     'context_words_capital': {},  # Context only before capitalized occurrences
                     'context_words_mid_cap': {},  # Context only for mid-sentence capitalizations
+                    'occurence_indices':[], # Recording the occurence indices for the word
+                    'post_length_counts':[], # Recording the length of posts in which the word occurs
                 })
             mentions[w]['occurrences'] += 1
             mentions[w]['occurence_indices'].append(word_i)
+            mentions[w]['post_length_counts'].append(len(words))
             # Sentence start occurrence calculation may be slightly approximate
             sentence_start = len(prev_context) == 0 or \
                 re.match('.*' + prev_context[-1] + r'[?.!]\s+' + w + '.*', post, re.IGNORECASE)
@@ -172,9 +177,13 @@ for post_i, (post_id, post) in enumerate(zip(post_ids, posts)):
 print('Finding most frequent context words')
 for key in ['context_words', 'context_words_capital', 'context_words_mid_cap']:
     for w in mentions:
-        # Computes and adds the mean occurence index of the word in all the posts
+        # Computes the mean occurence index of the word in all the posts
         avg_word_index = sum(mentions[w]['occurence_indices']) / mentions[w]['occurrences']
         mentions[w]['avg_index_in_post'] = avg_word_index
+
+        # Computes the mean length of the posts in which the word occurs
+        avg_post_length = sum(mentions[w]['post_length_counts']) / mentions[w]['occurrences']
+        mentions[w]['avg_post_length_word'] = avg_post_length
 
         if mentions[w][key]:
             mentions[w][key]['possible_name'] = \
@@ -185,6 +194,8 @@ for key in ['context_words', 'context_words_capital', 'context_words_mid_cap']:
 
 print('Saving results')
 df = pd.DataFrame.from_records(list(mentions.values()))
-df.drop(['occurence_indices'], axis=1, inplace = True)
 df.insert(1, 'num_posts', len(posts))  # Included for ease of later feature calculation
+# Dropping the intermediate fields that were used to compute a different feature
+df.drop(['occurence_indices'], axis=1, inplace = True)
+df.drop(['post_length_counts'], axis=1, inplace = True)
 df.to_csv(args.output_filename, index=False)
