@@ -38,6 +38,25 @@ argparser.add_argument('output_filename', type=str,
                        'overwritten if it already exists.')
 args = argparser.parse_args()
 
+def find_number_of_capitalized_letters(word):
+    capitalized_letter_count = 0
+    for letter in word:
+        if letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+            capitalized_letter_count += 1
+    return capitalized_letter_count
+
+def find_end_of_sentence_occurences(w, post):
+    count = 0
+    # Splitting post into sentences
+    sentences = post.split('.')
+    for sentence in sentences:
+        # Splitting a sentence into words
+        words = sentence.split(' ')
+        # Cgecking if the given word occurs at the end of the sentence.
+        if w == words[len(words) - 1].lower():
+            count += 1
+    return count
+
 print('Loading dictionary data')
 # English dictionary from Ubuntu 18.04 "wamerican" package; discard names and possessives
 wordlist = set()
@@ -119,19 +138,24 @@ for post_i, (post_id, post) in enumerate(zip(post_ids, posts)):
     for word_i, w in enumerate(words):
         w = w.strip()
         uppercase = int(w[0] == w[0].upper()) if len(w) > 0 else 0
+        case_preserved_word = w
         w = w.lower()
         if not re.match(r'.*[0-9].*', w) and len(w) > 1 and w not in wordlist and '_' not in w:
             # Could be a name
-            if w not in mentions:
+            if w not in mentions: 
                 mentions[w] = OrderedDict({
                     'possible_name': w,
                     'multi_word_name_original': multi_word_map[w] if w in multi_word_map else '',
                     'index_in_post': word_i,
+                    'avg_index_in_post': 0, # Avg will be calculated after recording all the occurences
                     'post_length_words': len(words),
+                    'avg_post_length_word': 0, # Avg will be calculated after recording all the occurences
+                    'capitalized_letters_count': 0, # Avg will be calculated after recording the sum of capital letter in all occurences
                     'occurrences': 0,
                     'capitalized_occurrences': 0,
                     'mid_sentence_cap': 0,
                     'sentence_start_occurrences': 0,
+                    'sentence_end_occurences': 0,
                     'is_dictionary_word': int(w in dictionary),
                     'common_firstname_freq': first_names[w] if w in first_names else 0,
                     'common_lastname_freq': last_names[w] if w in last_names else 0,
@@ -141,8 +165,14 @@ for post_i, (post_id, post) in enumerate(zip(post_ids, posts)):
                     'context_words': {},  # Context before all occurrences
                     'context_words_capital': {},  # Context only before capitalized occurrences
                     'context_words_mid_cap': {},  # Context only for mid-sentence capitalizations
+                    'occurence_indices':[], # Recording the occurence indices for the word
+                    'post_length_counts':[], # Recording the length of posts in which the word occurs
                 })
             mentions[w]['occurrences'] += 1
+            mentions[w]['capitalized_letters_count'] += find_number_of_capitalized_letters(case_preserved_word)
+            mentions[w]['occurence_indices'].append(word_i)
+            mentions[w]['post_length_counts'].append(len(words))
+            mentions[w]['sentence_end_occurences'] += find_end_of_sentence_occurences(w, post)
             # Sentence start occurrence calculation may be slightly approximate
             sentence_start = len(prev_context) == 0 or \
                 re.match('.*' + prev_context[-1] + r'[?.!]\s+' + w + '.*', post, re.IGNORECASE)
@@ -169,6 +199,14 @@ for post_i, (post_id, post) in enumerate(zip(post_ids, posts)):
 print('Finding most frequent context words')
 for key in ['context_words', 'context_words_capital', 'context_words_mid_cap']:
     for w in mentions:
+        # Computes the mean occurence index of the word in all the posts
+        avg_word_index = sum(mentions[w]['occurence_indices']) / mentions[w]['occurrences']
+        mentions[w]['avg_index_in_post'] = avg_word_index
+
+        # Computes the mean length of the posts in which the word occurs
+        avg_post_length = sum(mentions[w]['post_length_counts']) / mentions[w]['occurrences']
+        mentions[w]['avg_post_length_word'] = avg_post_length
+
         if mentions[w][key]:
             mentions[w][key]['possible_name'] = \
                 sum(mentions[w][key][v] for v in mentions[w][key] if v in mentions)
@@ -179,4 +217,7 @@ for key in ['context_words', 'context_words_capital', 'context_words_mid_cap']:
 print('Saving results')
 df = pd.DataFrame.from_records(list(mentions.values()))
 df.insert(1, 'num_posts', len(posts))  # Included for ease of later feature calculation
+# Dropping the intermediate fields that were used to compute a different feature
+df.drop(['occurence_indices'], axis=1, inplace = True)
+df.drop(['post_length_counts'], axis=1, inplace = True)
 df.to_csv(args.output_filename, index=False)
