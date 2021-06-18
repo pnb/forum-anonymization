@@ -40,6 +40,21 @@ argparser.add_argument('output_filename', type=str,
                        'overwritten if it already exists.')
 args = argparser.parse_args()
 
+def find_number_of_vowels(word):
+    vowel_count = 0
+    for letter in word:
+        if letter in 'aeiou':
+            vowel_count += 1
+    return vowel_count
+
+def find_number_of_capitalized_letters(word):
+    capitalized_letter_count = 0
+    for letter in word:
+        if letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+            capitalized_letter_count += 1
+    return capitalized_letter_count
+
+
 print('Loading dictionary data')
 # English dictionary from Ubuntu 18.04 "wamerican" package; discard names and possessives
 wordlist = set()
@@ -121,6 +136,7 @@ for post_i, (post_id, post) in enumerate(zip(post_ids, posts)):
     for word_i, w in enumerate(words):
         w = w.strip()
         uppercase = int(w[0] == w[0].upper()) if len(w) > 0 else 0
+        case_preserved_word = w
         w = w.lower()
         if not re.match(r'.*[0-9].*', w) and len(w) > 1 and w not in wordlist and '_' not in w:
             # Could be a name
@@ -132,6 +148,8 @@ for post_i, (post_id, post) in enumerate(zip(post_ids, posts)):
                     'avg_index_in_post': 0, # Avg will be calculated after recording all the occurences
                     'post_length_words': len(words),
                     'avg_post_length_word':0, # Avg will be calculated after recording all the occurences
+                    'vowel_count': find_number_of_vowels(w),
+                    'avg_capitalized_letter_count':0, # Avg will be calculated after recording the sum of capital letter in all occurences
                     'occurrences': 0,
                     'capitalized_occurrences': 0,
                     'mid_sentence_cap': 0,
@@ -149,6 +167,7 @@ for post_i, (post_id, post) in enumerate(zip(post_ids, posts)):
                     'post_length_counts':[], # Recording the length of posts in which the word occurs
                 })
             mentions[w]['occurrences'] += 1
+            mentions[w]['avg_capitalized_letter_count'] += find_number_of_capitalized_letters(case_preserved_word)
             mentions[w]['occurence_indices'].append(word_i)
             mentions[w]['post_length_counts'].append(len(words))
             # Sentence start occurrence calculation may be slightly approximate
@@ -184,6 +203,9 @@ for key in ['context_words', 'context_words_capital', 'context_words_mid_cap']:
         # Computes the mean length of the posts in which the word occurs
         avg_post_length = sum(mentions[w]['post_length_counts']) / mentions[w]['occurrences']
         mentions[w]['avg_post_length_word'] = avg_post_length
+
+        # Computes the mean number of capital letters among all the occurences of the word
+        mentions[w]['avg_capitalized_letter_count'] = mentions[w]['avg_capitalized_letter_count'] / mentions[w]['occurrences']
 
         if mentions[w][key]:
             mentions[w][key]['possible_name'] = \
