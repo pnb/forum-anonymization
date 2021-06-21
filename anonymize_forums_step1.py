@@ -48,7 +48,8 @@ def find_number_of_capitalized_letters(word):
 def find_end_of_sentence_occurences(w, post):
     count = 0
     # Splitting post into sentences
-    sentences = post.split('.')
+    sentences = re.split('[.?!;]',post)
+    print(sentences)
     for sentence in sentences:
         # Splitting a sentence into words
         words = sentence.split(' ')
