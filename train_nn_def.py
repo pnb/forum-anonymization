@@ -29,28 +29,7 @@ class NNClassifier(BaseEstimator, ClassifierMixin):
         self.validation_prop = validation_prop
         self.batch_size = batch_size
         self.verbose = verbose
-        self.file_prefix = file_prefix if file_prefix is not None else 'tmp-nn-model-'
-    
-    # def __getstate__(self):
-
-    #     dict =  copy.deepcopy(self.__dict__)
-
-    #     model = dict.pop('model_')
-    #     model.save_weights('model_weights.h5', overwrite=True)
-    #     open('model_architecture.json', 'w').write(model.to_json())
-
-    #     dict['model_'] = ""
-    #     return dict
-    
-    # def __setstate__(self, file_name):
-
-    #     m = keras.models.model_from_json(open('model_architecture.json').read())
-    #     m.load_weights('model_weights.h5')
-    #     opt = optimizers.SGD(self.learning_rate)
-    #     m.compile(opt, loss=self.loss, metrics=['acc'])
-
-    #     self.model_ = m
-        
+        self.file_prefix = file_prefix if file_prefix is not None else 'tmp-nn-model-'    
 
     def load_trained_weights(self, model_filename):
         self.model_ = load_model(model_filename)

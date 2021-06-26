@@ -26,12 +26,12 @@ print('Found ' + str(len(features)) + ' features, ' + str(len(df)) + ' instances
 new_X = df[features].values
 
 print('\nLoading and applying Extra-Trees model')
-m = joblib.load('holdout_model_extratrees.pkl')
+m = joblib.load('test_et.pkl')
 print(m)
 df.insert(1, 'extratrees_pred', m.predict_proba(new_X).T[1])
 
 print('\nLoading and applying DNN model')
-m = joblib.load('holdout_model_nn.pkl')
+m = joblib.load('test_nn.pkl')
 print(m)
 df.insert(2, 'nn_pred', m.predict_proba(new_X).T[1])
 

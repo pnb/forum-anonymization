@@ -51,12 +51,12 @@ else:
     m = train_nn_def.BespokeNN(num_dense_features=num_dense_features, verbose=0,
                                file_prefix=CACHE_DIR + '/holdout_bespoke_nn_')
     param_grid = {
-        'model__num_hidden_layers': [0, 1], #2, 4],
-        'model__hidden_layer_size': [2], #4, 8, 16, 32],
-        'model__dropout': [0, .25], #.5],
-        'model__learning_rate': [.01], # .001, .0001],
-        'model__dense_reg_strength': [.1], # .01, .001],  # Bespoke DNN specific parameters
-        'model__sparse_reg_strength': [.1], # .01, .001],
+        'model__num_hidden_layers': [0, 1, 2, 4],
+        'model__hidden_layer_size': [2, 4, 8, 16, 32],
+        'model__dropout': [0, .25, .5],
+        'model__learning_rate': [.01, .001, .0001],
+        'model__dense_reg_strength': [.1, .01, .001],  # Bespoke DNN specific parameters
+        'model__sparse_reg_strength': [.1, .01, .001],
     }
 
 xval = model_selection.StratifiedKFold(4, shuffle=True, random_state=RANDOM_SEED)
@@ -75,6 +75,7 @@ threshold = 1 / 3
 res = model_selection.cross_validate(gs, X, y, cv=xval, scoring=['roc_auc', 'precision', 'recall'],
                                      verbose=1, return_estimator=True)                                  
 pprint({k: v for k, v in res.items() if k != 'estimator'})
+print(res)
 
 # Error analysis
 err_df = pd.DataFrame(index=df.index, data={'pred': '', 'truth': y, 'fold': ''})
