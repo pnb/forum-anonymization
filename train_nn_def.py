@@ -1,6 +1,8 @@
 # Define neural net model that can be run through sklearn
-from keras.models import Model, load_model
-from keras import layers, optimizers, callbacks, regularizers, backend as K
+import tensorflow.keras as keras
+from keras.models import Model, load_model, model_from_json
+from keras import backend as K
+from keras import layers, optimizers, callbacks, regularizers
 from keras.utils import to_categorical
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
@@ -8,11 +10,15 @@ from sklearn.utils.multiclass import unique_labels
 from sklearn.metrics import classification_report, cohen_kappa_score
 from sklearn.utils.estimator_checks import check_estimator
 import numpy as np
-
+import types
+import tempfile
+import keras.models
+import copy
+import pandas as pd
 
 class NNClassifier(BaseEstimator, ClassifierMixin):
     def __init__(self, num_hidden_layers=1, hidden_layer_size=10, dropout=0, learning_rate=.01,
-                 loss='binary_crossentropy', epochs=100, validation_prop=.2, batch_size=32,
+                 loss='binary_crossentropy', epochs=1, validation_prop=.2, batch_size=32,
                  verbose=1, file_prefix=None):
         self.num_hidden_layers = num_hidden_layers
         self.hidden_layer_size = hidden_layer_size
@@ -24,8 +30,29 @@ class NNClassifier(BaseEstimator, ClassifierMixin):
         self.batch_size = batch_size
         self.verbose = verbose
         self.file_prefix = file_prefix if file_prefix is not None else 'tmp-nn-model-'
+    
+    # def __getstate__(self):
 
-    def load_trained_weights(model_filename):
+    #     dict =  copy.deepcopy(self.__dict__)
+
+    #     model = dict.pop('model_')
+    #     model.save_weights('model_weights.h5', overwrite=True)
+    #     open('model_architecture.json', 'w').write(model.to_json())
+
+    #     dict['model_'] = ""
+    #     return dict
+    
+    # def __setstate__(self, file_name):
+
+    #     m = keras.models.model_from_json(open('model_architecture.json').read())
+    #     m.load_weights('model_weights.h5')
+    #     opt = optimizers.SGD(self.learning_rate)
+    #     m.compile(opt, loss=self.loss, metrics=['acc'])
+
+    #     self.model_ = m
+        
+
+    def load_trained_weights(self, model_filename):
         self.model_ = load_model(model_filename)
 
     def build_model(self, input_shape, output_shape):
@@ -90,6 +117,35 @@ class BespokeNN(NNClassifier):
         self.num_dense_features = num_dense_features
         self.dense_reg_strength = dense_reg_strength
         self.sparse_reg_strength = sparse_reg_strength
+
+    def __getstate__(self):
+
+        # Creating a copy of the dictionary and removing the tensorflow model
+        dict =  copy.deepcopy(self.__dict__)
+        model = dict.pop('model_')
+
+        # Saving the tensorflow model separately
+        model.save_weights('model_weights.h5', overwrite=True)
+        open('model_architecture.json', 'w').write(model.to_json())
+        
+        # Returning the dictionary without the model_ for pickling
+        dict['model_'] = ""
+        return dict
+    
+    def __setstate__(self, d):
+        
+        # Assigning the saved dictionary values after unpickling except the model_
+        self.__dict__ = d
+
+        # Rebuilding the model
+        m = keras.models.model_from_json(open('model_architecture.json').read())
+        m.load_weights('model_weights.h5')
+        opt = optimizers.SGD(self.learning_rate)
+        m.compile(opt, loss=self.loss, metrics=['acc'])
+
+        # Reassigning the model after building
+        self.__dict__['model_'] = m
+        
 
     def get_params(self, deep=False):
         return {
