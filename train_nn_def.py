@@ -1,9 +1,10 @@
 # Define neural net model that can be run through sklearn
 import tensorflow.keras as keras
-from keras.models import Model, load_model, model_from_json
-from keras import backend as K
-from keras import layers, optimizers, callbacks, regularizers
-from keras.utils import to_categorical
+from tensorflow.keras.models import Model, load_model, model_from_json
+from tensorflow.keras import backend as K
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras import optimizers, callbacks, regularizers
+from tensorflow.keras import layers
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import unique_labels
@@ -12,7 +13,6 @@ from sklearn.utils.estimator_checks import check_estimator
 import numpy as np
 import types
 import tempfile
-import keras.models
 import copy
 import pandas as pd
 
@@ -42,7 +42,7 @@ class NNClassifier(BaseEstimator, ClassifierMixin):
             m = layers.Flatten()(m)  # Simple FC network, flatten everything
         for layer_num in range(self.num_hidden_layers):
             m = layers.Dense(self.hidden_layer_size, name='hidden' + str(layer_num + 1))(m)
-            m = layers.advanced_activations.LeakyReLU(alpha=.1)(m)
+            m = layers.LeakyReLU(alpha=.1)(m)
             if self.dropout > 0:
                 m = layers.Dropout(self.dropout)(m)
         m_output = layers.Dense(output_shape, activation='sigmoid')(m)
@@ -152,19 +152,19 @@ class BespokeNN(NNClassifier):
         # Engineered features (mostly densely-distributed)
         l2 = regularizers.l2(self.dense_reg_strength)
         m_dense = layers.Dense(self.hidden_layer_size, kernel_regularizer=l2)(dense_eng_in)
-        m_dense = layers.advanced_activations.LeakyReLU(alpha=.1)(m_dense)
+        m_dense = layers.LeakyReLU(alpha=.1)(m_dense)
         m_dense = layers.BatchNormalization()(m_dense)
 
         # Word features (mostly sparse)
         l1 = regularizers.l1(self.sparse_reg_strength)
         m_sparse = layers.Dense(self.hidden_layer_size, kernel_regularizer=l1)(sparse_word_in)
-        m_sparse = layers.advanced_activations.LeakyReLU(alpha=.1)(m_sparse)
+        m_sparse = layers.LeakyReLU(alpha=.1)(m_sparse)
         m_sparse = layers.BatchNormalization()(m_sparse)
 
         m = layers.Concatenate()([m_dense, m_sparse])
         for layer_num in range(self.num_hidden_layers):
             m = layers.Dense(self.hidden_layer_size, name='hidden' + str(layer_num + 1))(m)
-            m = layers.advanced_activations.LeakyReLU(alpha=.1)(m)
+            m = layers.LeakyReLU(alpha=.1)(m)
             if self.dropout > 0:
                 m = layers.Dropout(self.dropout)(m)
         m_output = layers.Dense(output_shape, activation='sigmoid', name='output')(m)
