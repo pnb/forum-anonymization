@@ -1,3 +1,4 @@
+# Apply pre-trained machine learning models to decide if possible names are indeed names or not
 import argparse
 
 import joblib
