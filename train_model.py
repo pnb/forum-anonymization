@@ -13,8 +13,6 @@ import joblib
 import train_nn_def
 
 RANDOM_SEED = 11798
-CACHE_DIR = '__pycache__'
-
 
 argparser = argparse.ArgumentParser(description='Train ML models for filtering possible names')
 argparser.add_argument('features_file', help='Filename of a features file (output of step 2a)')
@@ -114,10 +112,10 @@ joblib.dump(gs.best_estimator_, args.output_model_file)
 #############################
 # Saving the nn pred to compare to the loaded model. This can be removed once testing is complete
 
-df = pd.read_csv('s2a.csv', encoding='utf-8', na_filter=False)
-features = [f for f in df if f not in ['possible_name', 'is_name', 'multi_word_name_original']]
-new_X = df[features].values
+# df = pd.read_csv('s2a.csv', encoding='utf-8', na_filter=False)
+# features = [f for f in df if f not in ['possible_name', 'is_name', 'multi_word_name_original']]
+# new_X = df[features].values
 
-df.insert(1, 'nn_pred', gs.best_estimator_.predict_proba(new_X).T[1])
-df.to_csv('real_model.csv')
-#############################
+# df.insert(1, 'nn_pred', gs.best_estimator_.predict_proba(new_X).T[1])
+# df.to_csv('real_model.csv')
+# #############################

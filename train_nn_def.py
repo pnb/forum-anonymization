@@ -18,7 +18,7 @@ import pandas as pd
 
 class NNClassifier(BaseEstimator, ClassifierMixin):
     def __init__(self, num_hidden_layers=1, hidden_layer_size=10, dropout=0, learning_rate=.01,
-                 loss='binary_crossentropy', epochs=1, validation_prop=.2, batch_size=32,
+                 loss='binary_crossentropy', epochs=100, validation_prop=.2, batch_size=32,
                  verbose=1, file_prefix=None):
         self.num_hidden_layers = num_hidden_layers
         self.hidden_layer_size = hidden_layer_size
