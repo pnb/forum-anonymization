@@ -107,9 +107,19 @@ else:  # Load from another dataset file so the columns will match
         if col.startswith('context_'):
             common_context.add(col[8:])
 
+print('Loading frequency of common words')
+word_freq = pd.read_csv('wordFrequency.csv', encoding='utf-8', na_filter=False)
+all_word_occurence = np.sum(word_freq['freq'])
+
 print('Computing features')
 result = []
 for row_i, row in df.iterrows():
+    # Finding word frequency
+    f = 0
+    freq_file_indices = np.where(word_freq['lemma'] == row.possible_name)[0]
+    if len(freq_file_indices) > 0:
+        f = freq_file_indices[0]
+        
     if row_i % 10 == 0:
         print('%.1f%%' % (row_i / len(df) * 100), end='\r')
     result.append(OrderedDict({
@@ -123,6 +133,7 @@ for row_i, row in df.iterrows():
         'avg_index_in_post': row.avg_index_in_post,
         'first_post_length_words': row.post_length_words,
         'avg_post_length_words': row.avg_post_length_word,
+        'word_freq_ratio': f / all_word_occurence, # Finding the frequency of the word
         'prop_capitalized': row.capitalized_occurrences / row.occurrences,
         'prop_sentence_start': row.sentence_start_occurrences / row.occurrences,
         'prop_mid_sentence_cap': row.mid_sentence_cap /
