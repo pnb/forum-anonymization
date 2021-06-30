@@ -118,8 +118,9 @@ for row_i, row in df.iterrows():
     f = 0
     freq_file_indices = np.where(word_freq['lemma'] == row.possible_name)[0]
     if len(freq_file_indices) > 0:
-        f = freq_file_indices[0]
-        
+        # Totalling frequency from different parts of speech for a given word.
+        f = np.sum(word_freq['freq'][freq_file_indices])
+    
     if row_i % 10 == 0:
         print('%.1f%%' % (row_i / len(df) * 100), end='\r')
     result.append(OrderedDict({
