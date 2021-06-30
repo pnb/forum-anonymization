@@ -108,6 +108,7 @@ else:  # Load from another dataset file so the columns will match
             common_context.add(col[8:])
 
 print('Loading frequency of common words')
+# Loading the word frequency file
 word_freq = pd.read_csv('wordFrequency.csv', encoding='utf-8', na_filter=False)
 all_word_occurence = np.sum(word_freq['freq'])
 

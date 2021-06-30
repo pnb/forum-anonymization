@@ -51,3 +51,7 @@ This step removes the names identified from step 2b from the forum posts, along 
     python anonymize_forums_step3.py test_posts-step2b.csv test_posts.csv test_posts-step3.csv
 
 The output file should now contain the anonymized forum posts.
+
+## Credit
+
+The word list for the 5000 most commonly used words along with the associated frequencies was acquired from [www.wordfrequency.info](https://www.wordfrequency.info/). This serves as an acknowledgement of the same, in line with the policy mentioned on the website.
