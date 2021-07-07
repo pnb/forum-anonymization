@@ -1,4 +1,5 @@
 # Define neural net model that can be run through sklearn
+import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.keras.models import Model, load_model, model_from_json
 from tensorflow.keras import backend as K
@@ -15,6 +16,9 @@ import types
 import tempfile
 import copy
 import pandas as pd
+
+tf.config.threading.set_inter_op_parallelism_threads(1)
+tf.config.threading.set_intra_op_parallelism_threads(1)
 
 class NNClassifier(BaseEstimator, ClassifierMixin):
     def __init__(self, num_hidden_layers=1, hidden_layer_size=10, dropout=0, learning_rate=.01,

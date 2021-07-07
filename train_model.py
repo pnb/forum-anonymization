@@ -14,6 +14,7 @@ import joblib
 import train_nn_def
 
 RANDOM_SEED = 11798
+CACHE_DIR = '__pycache__'
 
 argparser = argparse.ArgumentParser(description='Train ML models for filtering possible names')
 argparser.add_argument('features_file', help='Filename of a features file (output of step 2a)')
@@ -50,19 +51,12 @@ else:
     m = train_nn_def.BespokeNN(num_dense_features=num_dense_features, verbose=0,
                                file_prefix=CACHE_DIR + '/holdout_bespoke_nn_')
     param_grid = {
-        # 'model__num_hidden_layers': [0, 1, 2, 4],
-        # 'model__hidden_layer_size': [2, 4, 8, 16, 32],
-        # 'model__dropout': [0, .25, .5],
-        # 'model__learning_rate': [.01, .001, .0001],
-        # 'model__dense_reg_strength': [.1, .01, .001],  # Bespoke DNN specific parameters
-        # 'model__sparse_reg_strength': [.1, .01, .001],
-
-        'model__num_hidden_layers': [0 ,1], # 1, 2, 4],
-        'model__hidden_layer_size': [2, 4], # 4, 8, 16, 32],
-        'model__dropout': [0, 0.25],# .25, .5],
-        'model__learning_rate': [.01, 0.001],# .001, .0001],
-        'model__dense_reg_strength': [.1, 0.01],# .01, .001],  # Bespoke DNN specific parameters
-        'model__sparse_reg_strength': [.1, 0.01],# .01, .001],
+        'model__num_hidden_layers': [0, 1, 2, 4],
+        'model__hidden_layer_size': [2, 4, 8, 16, 32],
+        'model__dropout': [0, .25, .5],
+        'model__learning_rate': [.01, .001, .0001],
+        'model__dense_reg_strength': [.1, .01, .001],  # Bespoke DNN specific parameters
+        'model__sparse_reg_strength': [.1, .01, .001],
     }
 
 xval = model_selection.StratifiedKFold(4, shuffle=True, random_state=RANDOM_SEED)
@@ -72,6 +66,7 @@ pipe = pipeline.Pipeline([
     ('model', m),
 ])
 gs = BayesSearchCV(pipe, param_grid,
+                                  n_iter=100,
                                   scoring=score_metric,
                                   verbose=2,
                                   cv=xval,
