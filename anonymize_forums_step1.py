@@ -66,6 +66,10 @@ with open('ubuntu-american-english.txt', encoding='utf-8') as dictfile:
 dictionary = set(wordlist)  # Make a copy to later fill is_dictionary_word
 print(str(len(wordlist)) + ' dictionary words loaded')
 
+print('Loading common verbs')
+verb_collection = pd.read_csv('verbs.csv')
+verbs = verb_collection['lemma']
+
 # Subtract a list of names from a dictionary to get a dictionary of non-name words
 # Name list from: http://deron.meranda.us/data/
 first_names = pd.read_csv('census-derived-all-first.txt', sep=r'\s+', header=None, na_filter=False)
@@ -153,6 +157,7 @@ for post_i, (post_id, post) in enumerate(zip(post_ids, posts)):
                     'capitalized_letters_count': 0, # Avg will be calculated after recording the sum of capital letter in all occurences
                     'occurrences': 0,
                     'capitalized_occurrences': 0,
+                    'verb_succession occurences': 0,
                     'mid_sentence_cap': 0,
                     'sentence_start_occurrences': 0,
                     'sentence_end_occurences': 0,
@@ -173,6 +178,11 @@ for post_i, (post_id, post) in enumerate(zip(post_ids, posts)):
             mentions[w]['occurence_indices'].append(word_i)
             mentions[w]['post_length_counts'].append(len(words))
             mentions[w]['sentence_end_occurences'] += find_end_of_sentence_occurences(w, post)
+
+            # Checking if succeding word is a common verb.
+            if word_i != (len(words) - 1) and words[word_i + 1] in verbs:
+                mentions[w]['verb_succession occurences'] += 1
+
             # Sentence start occurrence calculation may be slightly approximate
             sentence_start = len(prev_context) == 0 or \
                 re.match('.*' + prev_context[-1] + r'[?.!]\s+' + w + '.*', post, re.IGNORECASE)
