@@ -3,6 +3,7 @@
 from pprint import pprint
 import subprocess
 import argparse
+import skopt
 
 import pandas as pd
 import numpy as np
@@ -51,12 +52,19 @@ else:
     m = train_nn_def.BespokeNN(num_dense_features=num_dense_features, verbose=0,
                                file_prefix=CACHE_DIR + '/holdout_bespoke_nn_')
     param_grid = {
-        'model__num_hidden_layers': [0, 1, 2, 4],
-        'model__hidden_layer_size': [2, 4, 8, 16, 32],
-        'model__dropout': [0, .25, .5],
-        'model__learning_rate': [.01, .001, .0001],
-        'model__dense_reg_strength': [.1, .01, .001],  # Bespoke DNN specific parameters
-        'model__sparse_reg_strength': [.1, .01, .001],
+        # 'model__num_hidden_layers': [0, 1, 2, 4],
+        # 'model__hidden_layer_size': [2, 4, 8, 16, 32],
+        # 'model__dropout': [0, .25, .5],
+        # 'model__learning_rate': [.01, .001, .0001],
+        # 'model__dense_reg_strength': [.1, .01, .001],  # Bespoke DNN specific parameters
+        # 'model__sparse_reg_strength': [.1, .01, .001],
+
+        'model__num_hidden_layers': skopt.space.Integer(0, 4, prior='uniform'),
+        'model__hidden_layer_size': skopt.space.Integer(2, 32, prior='log-uniform', base=2),
+        'model__dropout': skopt.space.Real(0, 0.5, prior='uniform'),
+        'model__learning_rate': skopt.space.Real(.0001, 0.01, prior='log-uniform'),
+        'model__dense_reg_strength': skopt.space.Real(.001, 0.1, prior='log-uniform'),  # Bespoke DNN specific parameters
+        'model__sparse_reg_strength':skopt.space.Real(.001, 0.1, prior='log-uniform'),
     }
 
 xval = model_selection.StratifiedKFold(4, shuffle=True, random_state=RANDOM_SEED)
@@ -66,7 +74,9 @@ pipe = pipeline.Pipeline([
     ('model', m),
 ])
 gs = BayesSearchCV(pipe, param_grid,
-                                  n_iter=100,
+                                  n_iter=500,
+                                  random_state=RANDOM_SEED,
+                                  optimizer_kwargs={'n_initial_points': 50},
                                   scoring=score_metric,
                                   verbose=2,
                                   cv=xval,
