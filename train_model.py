@@ -15,7 +15,7 @@ import joblib
 import train_nn_def
 
 RANDOM_SEED = 11798
-CACHE_DIR = '__pycache__'
+CACHE_DIR = 'temp'
 
 argparser = argparse.ArgumentParser(description='Train ML models for filtering possible names')
 argparser.add_argument('features_file', help='Filename of a features file (output of step 2a)')
@@ -43,9 +43,13 @@ score_metric = metrics.make_scorer(metrics.mean_squared_error, greater_is_better
 if args.model_type == 'extra-trees':
     m = ensemble.ExtraTreesClassifier(n_estimators=500, bootstrap=True, random_state=RANDOM_SEED)
     param_grid = {
-        'model__max_features': [.25, .5, .75, 1.0],
-        'model__max_samples': [.5, .75, .999],
-        'model__min_samples_leaf': [1, 2, 4, 8, 16, 32],
+        'model__max_features': skopt.space.Real(0.25, 1, prior='uniform'),
+        'model__max_samples': skopt.space.Real(0.5, 0.999, prior='uniform'),
+        'model__min_samples_leaf': skopt.space.Integer(2, 32, prior='log-uniform', base=2),
+
+        # 'model__max_features': [.25, .5, .75, 1.0],
+        # 'model__max_samples': [.5, .75, .999],
+        # 'model__min_samples_leaf': [1, 2, 4, 8, 16, 32],
     }
 else:
     num_dense_features = features.index([f for f in features if 'context_' in f][0])
@@ -74,9 +78,9 @@ pipe = pipeline.Pipeline([
     ('model', m),
 ])
 gs = BayesSearchCV(pipe, param_grid,
-                                  n_iter=500,
+                                  n_iter=10,
                                   random_state=RANDOM_SEED,
-                                  optimizer_kwargs={'n_initial_points': 50},
+                                  optimizer_kwargs={'n_initial_points': 5},
                                   scoring=score_metric,
                                   verbose=2,
                                   cv=xval,
