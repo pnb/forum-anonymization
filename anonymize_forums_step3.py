@@ -9,7 +9,6 @@ from itertools import repeat
 import pandas as pd
 from tqdm import tqdm
 import multiprocessing
-import time
 
 def yes_no_prompt(prompt_text):
     ans = ''
@@ -31,10 +30,6 @@ def redact_post(index, post, regex_dict):
     return p
     
 def main():
-
-    start_time = time.time()
-    manager = multiprocessing.Manager()
-    result = manager.dict()
 
     ids = []
 
@@ -69,8 +64,6 @@ def main():
     if args.posts_file.endswith('.csv'):
         with open(args.posts_file, 'r', encoding='utf-8', errors='backslashreplace') as infile:
             df = pd.read_csv(infile, na_filter=False)
-            df = pd.concat([df] * 5000, ignore_index=False)
-            print(len(df))
     else:
         df = pd.read_excel(args.posts_file, sheet_name='post')
         df = df[['post', 'message_text']]
@@ -83,6 +76,9 @@ def main():
             '\naverage length of values in the discussion forum post column.')
         yes_no_prompt('Are you sure this is correct?') or sys.exit(1)
 
+    if len(ids) != len(ids.unique()):
+        print('The IDs specified in the ID column (first column) are not unique.')
+        yes_no_prompt('Are you sure the input file is correct?') or sys.exit(1)
 
     names_df = pd.read_csv(args.names_file, encoding='utf-8', na_filter=False)
     if 'possible_name' not in names_df.columns:
@@ -92,8 +88,6 @@ def main():
     names_regex = re.compile(r'\b(' + '|'.join(names) + r')\b', flags=re.IGNORECASE)
 
     # Anonymize forum text column
-
-    processes = []
     regex_dict = {
         'email': EMAIL_REGEX,
         'url': URL_REGEX,
@@ -101,16 +95,15 @@ def main():
         'number': NUMBERS_REGEX,
         'name': names_regex,
     }
-    args = list(zip(ids, posts, repeat(regex_dict)))
+    arguments = list(zip(ids, posts, repeat(regex_dict)))
 
-
-    with multiprocessing.Pool(processes=3) as pool:
-        result = pool.starmap(redact_post, args)
+    with multiprocessing.Pool(processes=int(multiprocessing.cpu_count() / 2)) as pool:
+        result = pool.starmap(redact_post, arguments)
 
     # Save results to file
     print('Saving result')
     out_df = pd.DataFrame(OrderedDict({df.columns[0]: ids, 'anonymized_post': result})) \
-        .to_csv('k.csv', index=False, encoding='utf-8')
-    print("--- Completed in %s seconds. File(s) saved. ---" % (time.time() - start_time))
+        .to_csv(args.output_file, index=False, encoding='utf-8')
+    
 if __name__ == '__main__':
     main()
