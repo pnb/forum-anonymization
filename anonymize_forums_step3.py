@@ -4,6 +4,7 @@ import sys
 import re
 from collections import OrderedDict
 import argparse
+from itertools import repeat
 
 import pandas as pd
 from tqdm import tqdm
@@ -16,7 +17,7 @@ def yes_no_prompt(prompt_text):
         ans = input(prompt_text + ' [y/n] ')
     return ans == 'y'
 
-def redact_post(index, post, regex_dict, result):
+def redact_post(index, post, regex_dict):
     # Remove email addresses
     p = regex_dict['email'].sub(' email_placeholder ', post)
     # Remove URLs
@@ -27,9 +28,10 @@ def redact_post(index, post, regex_dict, result):
     p = regex_dict['number'].sub(' number_placeholder ', p)
     # Remove names
     p = regex_dict['name'].sub('name_placeholder', p)
-    result[index] = p
-
+    return p
+    
 def main():
+
     start_time = time.time()
     manager = multiprocessing.Manager()
     result = manager.dict()
@@ -67,7 +69,7 @@ def main():
     if args.posts_file.endswith('.csv'):
         with open(args.posts_file, 'r', encoding='utf-8', errors='backslashreplace') as infile:
             df = pd.read_csv(infile, na_filter=False)
-            df = pd.concat([df]*5000, ignore_index=False)
+            df = pd.concat([df] * 5000, ignore_index=False)
             print(len(df))
     else:
         df = pd.read_excel(args.posts_file, sheet_name='post')
@@ -99,20 +101,16 @@ def main():
         'number': NUMBERS_REGEX,
         'name': names_regex,
     }
+    args = list(zip(ids, posts, repeat(regex_dict)))
 
-    for index, post in enumerate(posts):
-        p = multiprocessing.Process(target = redact_post, args = (index, post, regex_dict, result))
-        processes.append(p)
-        p.start()
 
-    for process in processes:
-        process.join()
+    with multiprocessing.Pool(processes=3) as pool:
+        result = pool.starmap(redact_post, args)
 
-    print(result)
     # Save results to file
     print('Saving result')
-    out_df = pd.DataFrame(OrderedDict({df.columns[0]: result.keys(), 'anonymized_post': result.values()})) \
-        .to_csv(args.output_file, index=False, encoding='utf-8')
+    out_df = pd.DataFrame(OrderedDict({df.columns[0]: ids, 'anonymized_post': result})) \
+        .to_csv('k.csv', index=False, encoding='utf-8')
     print("--- Completed in %s seconds. File(s) saved. ---" % (time.time() - start_time))
 if __name__ == '__main__':
     main()
