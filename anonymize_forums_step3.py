@@ -34,7 +34,6 @@ def main():
     ids = []
 
     # See step 1 for info on regular expressions (TODO: ideally these should not be redundant)
-    print('compiling regex')
     EMAIL_REGEX = re.compile(r'\b[a-zA-Z0-9_.+]+@[a-zA-Z0-9_.+]+\.[a-zA-Z0-9_.+]+\b')
     URL_REGEX = re.compile(r'\b((http|https|ftp)://|www\d{0,3}.)\S+')
     PHONE_REGEX = re.compile(r'(\b|\()(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b')
@@ -86,8 +85,7 @@ def main():
         sys.exit(1)
     names = names_df.possible_name.values
     names_regex = re.compile(r'\b(' + '|'.join(names) + r')\b', flags=re.IGNORECASE)
-
-    # Anonymize forum text column
+    
     regex_dict = {
         'email': EMAIL_REGEX,
         'url': URL_REGEX,
@@ -98,7 +96,8 @@ def main():
     arguments = list(zip(ids, posts, repeat(regex_dict)))
 
     with multiprocessing.Pool(processes=int(multiprocessing.cpu_count() / 2)) as pool:
-        result = pool.starmap(redact_post, arguments)
+        # result = pool.starmap(redact_post, arguments)
+        result = list(tqdm(pool.starmap(redact_post, arguments), total=len(posts))) 
 
     # Save results to file
     print('Saving result')
