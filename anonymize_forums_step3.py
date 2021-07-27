@@ -27,7 +27,7 @@ def redact_post(index, post, regex_dict):
     p = regex_dict['number'].sub(' number_placeholder ', p)
     # Remove names
     p = regex_dict['name'].sub('name_placeholder', p)
-    return p
+    return int(index), p
     
 def main():
 
@@ -101,8 +101,9 @@ def main():
 
     # Save results to file
     print('Saving result')
-    out_df = pd.DataFrame(OrderedDict({df.columns[0]: ids, 'anonymized_post': result})) \
-        .to_csv(args.output_file, index=False, encoding='utf-8')
+    out_df = pd.DataFrame(result, columns=['id', 'anonymized_post']) 
+    out_df.sort_values(by='id',inplace=True, ignore_index=True)
+    out_df.to_csv(args.output_file, index=False, encoding='utf-8')
     
 if __name__ == '__main__':
     main()
