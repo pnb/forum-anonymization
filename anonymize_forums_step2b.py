@@ -5,7 +5,6 @@ import joblib
 import pandas as pd
 from sklearn import metrics
 
-
 argparser = argparse.ArgumentParser(
     description='Apply existing machine learning models to a dataset of possible names to predict '
                 'if each one is a name or not')
@@ -21,12 +20,13 @@ args = argparser.parse_args()
 
 print('Loading data')
 df = pd.read_csv(args.input_filename, encoding='utf-8', na_filter=False)
+df.drop(columns=['first_index_in_post','first_post_length'], axis = 1, inplace=True)
 features = [f for f in df if f not in ['possible_name', 'is_name', 'multi_word_name_original']]
 print('Found ' + str(len(features)) + ' features, ' + str(len(df)) + ' instances')
 new_X = df[features].values
 
 print('\nLoading and applying Extra-Trees model')
-m = joblib.load('holdout_model_extratrees.pkl')
+m = joblib.load('new_model_et.pkl')
 print(m)
 df.insert(1, 'extratrees_pred', m.predict_proba(new_X).T[1])
 
