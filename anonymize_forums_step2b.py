@@ -20,20 +20,21 @@ args = argparser.parse_args()
 
 print('Loading data')
 df = pd.read_csv(args.input_filename, encoding='utf-8', na_filter=False)
-df.drop(columns=['first_index_in_post','first_post_length'], axis = 1, inplace=True)
-features = [f for f in df if f not in ['possible_name', 'is_name', 'multi_word_name_original']]
-print('Found ' + str(len(features)) + ' features, ' + str(len(df)) + ' instances')
-new_X = df[features].values
+features_et = [f for f in df if f not in ['possible_name', 'is_name', 'multi_word_name_original', 'first_index_in_post', 'first_post_length_words']]
+features_nn = [f for f in df if f not in ['possible_name', 'is_name', 'multi_word_name_original', 'avg_capital_letters_count', 'word_freq_ratio', 'prop_sentence_end', 'avg_index_in_post', 'vowel_count', 'avg_post_length_words']]
+print('Found ' + str(len(df.columns)) + ' features, ' + str(len(df)) + ' instances')
+new_et_X = df[features_et].values
+new_nn_X = df[features_nn].values
 
 print('\nLoading and applying Extra-Trees model')
 m = joblib.load('new_model_et.pkl')
 print(m)
-df.insert(1, 'extratrees_pred', m.predict_proba(new_X).T[1])
+df.insert(1, 'extratrees_pred', m.predict_proba(new_et_X).T[1])
 
 print('\nLoading and applying DNN model')
 m = joblib.load('holdout_model_nn.pkl')
 print(m)
-df.insert(2, 'nn_pred', m.predict_proba(new_X).T[1])
+df.insert(2, 'nn_pred', m.predict_proba(new_nn_X).T[1])
 
 print('\nSaving results')
 # Insert predictions
