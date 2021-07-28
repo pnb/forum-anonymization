@@ -71,6 +71,13 @@ def edits2(word):
     # Set of edits that are two edits away from `word`
     return set(e2 for e1 in edits1(word) for e2 in edits1(e1))
 
+def find_number_of_vowels(word):
+    vowel_count = 0
+    for letter in word:
+        if letter in 'aeiou':
+            vowel_count += 1
+    return vowel_count
+
 
 print('Loading possible names data')
 df = pd.read_csv(args.possible_names_csv, encoding='utf-8', na_filter=False)  # "Nan" != NA
@@ -100,9 +107,21 @@ else:  # Load from another dataset file so the columns will match
         if col.startswith('context_'):
             common_context.add(col[8:])
 
+print('Loading frequency of common words')
+# Loading the word frequency file
+word_freq = pd.read_csv('wordFrequency.csv', encoding='utf-8', na_filter=False)
+all_word_occurence = np.sum(word_freq['freq'])
+
 print('Computing features')
 result = []
 for row_i, row in df.iterrows():
+    # Finding word frequency
+    f = 0
+    freq_file_indices = np.where(word_freq['lemma'] == row.possible_name)[0]
+    if len(freq_file_indices) > 0:
+        # Totalling frequency from different parts of speech for a given word.
+        f = np.sum(word_freq['freq'][freq_file_indices])
+    
     if row_i % 10 == 0:
         print('%.1f%%' % (row_i / len(df) * 100), end='\r')
     result.append(OrderedDict({
@@ -110,14 +129,20 @@ for row_i, row in df.iterrows():
         'multi_word_name_original': row.multi_word_name_original,
         'is_name': row.truth if 'truth' in row.index else '',
         'occurrences': row.occurrences,  # / row.num_posts,  # Prop. probably won't generalize
+        'vowel_count': find_number_of_vowels(row.possible_name),
+        'avg_capital_letters_count': row.capitalized_letters_count / row.occurrences,
         'first_index_in_post': row.index_in_post,
+        'avg_index_in_post': row.avg_index_in_post,
         'first_post_length_words': row.post_length_words,
+        'avg_post_length_words': row.avg_post_length_word,
+        'word_freq_ratio': f / all_word_occurence, # Finding the frequency of the word
         'prop_capitalized': row.capitalized_occurrences / row.occurrences,
         'prop_sentence_start': row.sentence_start_occurrences / row.occurrences,
         'prop_mid_sentence_cap': row.mid_sentence_cap /
         (row.occurrences - row.sentence_start_occurrences)
         if row.occurrences - row.sentence_start_occurrences > 0 else -1,
         'prop_mid_sentence_cap_overall': row.mid_sentence_cap / row.occurrences,
+        'prop_sentence_end': row.sentence_end_occurences / row.occurrences,
         'is_dictionary_word': row.is_dictionary_word,
         'is_common_firstname': int(row.common_firstname_freq > 0),
         'is_common_lastname': int(row.common_lastname_freq > 0),
