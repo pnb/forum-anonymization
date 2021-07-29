@@ -39,6 +39,15 @@ argparser.add_argument('output_filename', type=str,
 args = argparser.parse_args()
 
 def find_number_of_capitalized_letters(word):
+    """
+    Computes the number of capitalized letters in the given word.
+
+    Args:
+        word (str): The word for which the capital letter count needs to be computed.
+
+    Returns:
+        [int]: The number of capital letters in the word.
+    """
     capitalized_letter_count = 0
     for letter in word:
         if letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
@@ -46,6 +55,16 @@ def find_number_of_capitalized_letters(word):
     return capitalized_letter_count
 
 def find_end_of_sentence_occurences(w, post):
+    """
+    Finding the number of times a word occurs at the end of a sentence.
+
+    Args:
+        w (str): The word
+        post ([type]): The post
+
+    Returns:
+        [int]: The count of sentence end occurences
+    """
     count = 0
     # Splitting post into sentences
     sentences = re.split('[.?!;]',post)
@@ -174,10 +193,10 @@ for post_i, (post_id, post) in enumerate(zip(post_ids, posts)):
                     'post_length_counts':[], # Recording the length of posts in which the word occurs
                 })
             mentions[w]['occurrences'] += 1
-            mentions[w]['capitalized_letters_count'] += find_number_of_capitalized_letters(case_preserved_word)
-            mentions[w]['occurence_indices'].append(word_i)
-            mentions[w]['post_length_counts'].append(len(words))
-            mentions[w]['sentence_end_occurences'] += find_end_of_sentence_occurences(w, post)
+            mentions[w]['capitalized_letters_count'] += find_number_of_capitalized_letters(case_preserved_word) # Adding to the number of capitalized letters across all occurences
+            mentions[w]['occurence_indices'].append(word_i) # Appending to the list of word indices
+            mentions[w]['post_length_counts'].append(len(words)) # Appending to the list of post lengths
+            mentions[w]['sentence_end_occurences'] += find_end_of_sentence_occurences(w, post) # Adding to the number of end of sentence occurences
 
             # Checking if succeding word is a common verb.
             if word_i != (len(words) - 1) and words[word_i + 1] in verbs:

@@ -20,7 +20,10 @@ args = argparser.parse_args()
 
 print('Loading data')
 df = pd.read_csv(args.input_filename, encoding='utf-8', na_filter=False)
+# Specifying the features. This is done since the ET and NN models were not trained on the same features.
+# Removing features that were not used for the training of the Extra Trees Model
 features_et = [f for f in df if f not in ['possible_name', 'is_name', 'multi_word_name_original', 'first_index_in_post', 'first_post_length_words']]
+# Removing features that were not use for the training of the Neural Net Modl
 features_nn = [f for f in df if f not in ['possible_name', 'is_name', 'multi_word_name_original', 'avg_capital_letters_count', 'word_freq_ratio', 'prop_sentence_end', 'avg_index_in_post', 'vowel_count', 'avg_post_length_words']]
 print('Found ' + str(len(df.columns)) + ' features, ' + str(len(df)) + ' instances')
 new_et_X = df[features_et].values

@@ -72,6 +72,7 @@ def edits2(word):
     return set(e2 for e1 in edits1(word) for e2 in edits1(e1))
 
 def find_number_of_vowels(word):
+    # Number of vowels in a word
     vowel_count = 0
     for letter in word:
         if letter in 'aeiou':

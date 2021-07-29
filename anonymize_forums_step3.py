@@ -17,6 +17,8 @@ def yes_no_prompt(prompt_text):
     return ans == 'y'
 
 def redact_post(index, post, regex_dict):
+    # A function to redact all identified names, emails, urls and phone numbers from the post
+
     # Remove email addresses
     p = regex_dict['email'].sub(' email_placeholder ', post)
     # Remove URLs
@@ -96,13 +98,13 @@ def main():
     arguments = list(zip(ids, posts, repeat(regex_dict)))
 
     with multiprocessing.Pool(processes=int(multiprocessing.cpu_count() / 2)) as pool:
-        # result = pool.starmap(redact_post, arguments)
+        # Multiprocessing to speed up redaction process.
         result = list(tqdm(pool.starmap(redact_post, arguments), total=len(posts))) 
 
     # Save results to file
     print('Saving result')
     out_df = pd.DataFrame(result, columns=['id', 'anonymized_post']) 
-    out_df.sort_values(by='id',inplace=True)
+    out_df.sort_values(by='id',inplace=True) # Sorting posts by index in case the order was changesd due to multiprcoessing.
     out_df.to_csv(args.output_file, index=False, encoding='utf-8')
     
 if __name__ == '__main__':
